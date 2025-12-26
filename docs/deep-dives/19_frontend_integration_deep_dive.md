@@ -61,7 +61,7 @@ graph TD
     QueryClientProvider --> Router
     Router --> Page[Product Page]
     
-    Page -->|React Query| Hook[useProduct(id)]
+    Page -->|React Query| Hook["useProduct(id)"]
     Hook -->|Axios| API[API Gateway]
 ```
 
