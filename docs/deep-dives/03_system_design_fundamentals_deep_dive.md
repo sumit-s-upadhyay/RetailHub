@@ -98,12 +98,12 @@ sequenceDiagram
 ### 5.2 CQRS Architecture
 ```mermaid
 graph TD
-    Client -->|Write: Place Order| CMD[Command Model (OMS)]
-    Client -->|Read: View History| QRY[Query Model (Analytics)]
+    Client -->|Write: Place Order| CMD["Command Model (OMS)"]
+    Client -->|Read: View History| QRY["Query Model (Analytics)"]
     
-    CMD --> DB1[(Write DB: PostgreSQL)]
+    CMD --> DB1[("Write DB: PostgreSQL")]
     DB1 -->|CDC / Kafka Events| Projector[Event Projector]
-    Projector --> DB2[(Read DB: Elastic/Mongo)]
+    Projector --> DB2[("Read DB: Elastic/Mongo")]
     
     QRY --> DB2
 ```
