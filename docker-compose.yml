@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # INFRASTRUCTURE: DATA & MESSAGING
+  # ---------------------------------------------------------------------------
+  
+  # MySQL Database (Shared Instance for Resource Efficiency)
+  # In Prod, each service usually has its own DB server, but for local env we use one container with multiple schemas.
+  mysql:
+    image: mysql:8.0
+    container_name: retailhub-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: retailhub_crm # Default DB
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./infra/mysql-init:/docker-entrypoint-initdb.d # Init script to create oms/notify DBs
+    networks:
+      - retailhub-net
+
+  # Zookeeper (Required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: retailhub-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - retailhub-net
+
+  # Kafka (Message Broker)
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: retailhub-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - retailhub-net
+
+  # ---------------------------------------------------------------------------
+  # APPLICATIONS (Uncomment when Dockerfiles are ready)
+  # ---------------------------------------------------------------------------
+  # crm-service: ...
+  # oms-service: ...
+
+networks:
+  retailhub-net:
+    driver: bridge
+
+volumes:
+  mysql_data:

@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS retailhub_oms;
+CREATE DATABASE IF NOT EXISTS retailhub_notification;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
