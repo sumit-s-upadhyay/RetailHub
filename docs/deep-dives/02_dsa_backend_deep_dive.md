@@ -80,9 +80,8 @@ graph TD
     
     Part1 --> C1[Consumer Instance 1]
     Part2 --> C2[Consumer Instance 2]
-    
-    note using "Key" ensures Tenant-A orders are strictly ordered
 ```
+> **Note:** Using "Key" (e.g. TenantID) ensures all orders for Tenant-A go to the same partition, guaranteeing strict ordering.
 
 ### 5.2 Category Tree Traversal (DFS/Recursion)
 ```mermaid
