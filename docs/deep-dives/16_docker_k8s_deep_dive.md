@@ -61,9 +61,8 @@ graph TD
     Ingress[Ingress Controller] --> Svc["Service (ClusterIP)"]
     Svc --> Pod1["Pod: OMS (IP: 10.1.1.1)"]
     Svc --> Pod2["Pod: OMS (IP: 10.1.1.2)"]
-    
-    note right of Svc: DNS: oms-service.default.svc
 ```
+> **Note:** DNS revolves to `oms-service.default.svc`.
 
 ---
 

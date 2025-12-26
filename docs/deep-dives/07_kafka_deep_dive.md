@@ -72,9 +72,8 @@ graph TD
     
     Topic -- P0, P1 --> C1
     Topic -- P2 --> C2
-    
-    note right of C2: Note: If C2 dies, P2 moves to C1
 ```
+> **Note:** If C2 dies, P2 moves to C1 (Rebalancing).
 
 ---
 

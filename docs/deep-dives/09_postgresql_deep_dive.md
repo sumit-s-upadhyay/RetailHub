@@ -64,10 +64,8 @@ graph TD
     App[Application] -->|INSERT date=2024-01-15| Parent["Table: Orders"]
     Parent -->|Routes to| P1["Partition: orders_jan24"]
     Parent -->|Routes to| P2["Partition: orders_feb24"]
-    
-    note right of Parent: "Virtual" Table
-    note right of P1: Physical Storage
 ```
+> **Note:** The Parent is a "Virtual" table. P1/P2 are Physical Storage.
 
 ---
 
