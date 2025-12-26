@@ -66,9 +66,8 @@ graph LR
     GW -->|mTLS| SvcA[Service A]
     SvcA -->|mTLS| SvcB[Service B]
     SvcA -->|TLS| DB[(Database)]
-    
-    note right of SvcA: Certificate Verification at every hop
 ```
+> **Note:** Certificate Verification happens at every hop (Zero Trust).
 
 ---
 
