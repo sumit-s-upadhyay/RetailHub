@@ -61,7 +61,7 @@ GraphQL usually returns `200 OK` even for errors.
 ### 5.1 Resolver Flow
 ```mermaid
 graph TD
-    Req[GQL Query] --> Root[Root Resolver: getProduct(id)]
+    Req[GQL Query] --> Root["Root Resolver: getProduct(id)"]
     Root -->|Fetch| Inv[Inventory Service]
     Root -->|Return| P[Product Object]
     
