@@ -7,7 +7,10 @@ export default function PaymentSection() {
 
     const fetchHistory = async () => {
         try {
-            const res = await fetch('http://localhost:8084/api/payment/history');
+            const token = localStorage.getItem('token');
+            const res = await fetch('http://localhost:8080/api/payment/history', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             setTransactions(data);
         } catch (e) {

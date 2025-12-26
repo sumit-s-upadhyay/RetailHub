@@ -9,7 +9,10 @@ export default function CsrDashboard() {
     const fetchPending = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8082/api/oms/pending');
+            const token = localStorage.getItem('token');
+            const res = await fetch('http://localhost:8080/api/oms/pending', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             setOrders(data);
         } catch (e) {
@@ -27,7 +30,11 @@ export default function CsrDashboard() {
 
     const handleApprove = async (id) => {
         try {
-            await fetch(`http://localhost:8082/api/oms/${id}/approve`, { method: 'POST' });
+            const token = localStorage.getItem('token');
+            await fetch(`http://localhost:8080/api/oms/${id}/approve`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             fetchPending();
         } catch (e) {
             alert("Failed to approve");

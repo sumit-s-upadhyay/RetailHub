@@ -1,3 +1,5 @@
 CREATE DATABASE IF NOT EXISTS retailhub_oms;
+CREATE DATABASE IF NOT EXISTS retailhub_payment;
+CREATE DATABASE IF NOT EXISTS retailhub_inventory;
 CREATE DATABASE IF NOT EXISTS retailhub_notification;
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';

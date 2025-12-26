@@ -1,226 +1,207 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, UserPlus, Users, Lock, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Users, Truck, ShoppingBag, ShieldCheck, UserPlus, Server, Activity, Database } from 'lucide-react';
 
 export default function CrmSection() {
-    // Auth State
-    const [userRole, setUserRole] = useState(null); // 'ADMIN', 'CSR' or null
-    const [credentials, setCredentials] = useState({ username: '', password: '' });
-
-    // Form States
-    const [csrForm, setCsrForm] = useState({ username: '', password: '' });
-    const [custForm, setCustForm] = useState({ name: '', email: '' });
-
-    // Logs
+    const [activeTab, setActiveTab] = useState('system'); // 'system' | 'staff' | 'retailers'
     const [statusMsg, setStatusMsg] = useState('');
 
-    const login = (role) => {
-        setStatusMsg('');
-        if (role === 'ADMIN') {
-            setCredentials({ username: 'admin', password: 'admin123' });
-            setUserRole('ADMIN');
-        } else if (role === 'CSR') {
-            setCredentials({ username: 'csr1', password: 'csr123' });
-            setUserRole('CSR');
-        }
-    };
+    // Forms
+    const [staffForm, setStaffForm] = useState({ username: '', password: '', role: 'CSR' });
+    const [retailerForm, setRetailerForm] = useState({ username: '', password: '' });
 
-    const logout = () => {
-        setUserRole(null);
-        setCredentials({ username: '', password: '' });
-        setStatusMsg('');
-    };
+    // Dummy System Stats (In real app, fetch from Actuator/Metrics)
+    const stats = [
+        { label: 'System Status', value: 'Healthy', icon: <Activity className="text-emerald-400" />, color: 'bg-emerald-500/10 border-emerald-500/20' },
+        { label: 'Active Tenants', value: '12', icon: <ShoppingBag className="text-blue-400" />, color: 'bg-blue-500/10 border-blue-500/20' },
+        { label: 'DB Connections', value: '48', icon: <Database className="text-purple-400" />, color: 'bg-purple-500/10 border-purple-500/20' },
+        { label: 'Uptime', value: '99.98%', icon: <Server className="text-amber-400" />, color: 'bg-amber-500/10 border-amber-500/20' },
+    ];
 
-    // API ACTION: Create CSR (Admin Only)
-    const handleCreateCsr = async (e) => {
+    const handleCreateStaff = async (e) => {
         e.preventDefault();
-        setStatusMsg('⏳ Creating CSR Profile...');
-
+        setStatusMsg('⏳ Creating Staff Account...');
         try {
-            const authHeader = 'Basic ' + btoa(`${credentials.username}:${credentials.password}`);
-            const url = `http://localhost:8081/api/admin/create-csr?username=${csrForm.username}&password=${csrForm.password}`;
-
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Authorization': authHeader }
-            });
-
+            const url = `http://localhost:8080/api/auth/register-internal?username=${staffForm.username}&password=${staffForm.password}&role=${staffForm.role}`;
+            const res = await fetch(url, { method: 'POST' });
             if (res.ok) {
-                const text = await res.text();
-                setStatusMsg('✅ ' + text);
-                setCsrForm({ username: '', password: '' });
+                setStatusMsg(`✅ Created ${staffForm.role}: ${staffForm.username}`);
+                setStaffForm({ username: '', password: '', role: 'CSR' });
             } else {
-                setStatusMsg('❌ Access Denied: ' + res.status);
+                setStatusMsg('❌ Failed: ' + await res.text());
             }
-        } catch (err) {
-            setStatusMsg('❌ Network Error: Is CRM running?');
-        }
+        } catch (err) { setStatusMsg('❌ Network Error'); }
     };
 
-    // API ACTION: Onboard Customer (CSR Only)
-    const handleOnboardCustomer = async (e) => {
+    const handleOnboardRetailer = async (e) => {
         e.preventDefault();
-        setStatusMsg('⏳ Onboarding Customer...');
-
+        setStatusMsg('⏳ Onboarding Retail Store...');
         try {
-            const authHeader = 'Basic ' + btoa(`${credentials.username}:${credentials.password}`);
-            const url = `http://localhost:8081/api/csr/onboard-customer?name=${custForm.name}&email=${custForm.email}`;
-
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Authorization': authHeader }
-            });
-
+            // Create as TENANT_ADMIN
+            const url = `http://localhost:8080/api/auth/register-internal?username=${retailerForm.username}&password=${retailerForm.password}&role=TENANT_ADMIN`;
+            const res = await fetch(url, { method: 'POST' });
             if (res.ok) {
-                const text = await res.text();
-                setStatusMsg('✅ ' + text);
-                setCustForm({ name: '', email: '' });
+                setStatusMsg(`✅ Onboarded Retailer: ${retailerForm.username}`);
+                setRetailerForm({ username: '', password: '' });
             } else {
-                setStatusMsg('❌ Access Denied: ' + res.status);
+                setStatusMsg('❌ Failed: ' + await res.text());
             }
-        } catch (err) {
-            setStatusMsg('❌ Network Error: Is CRM running?');
-        }
+        } catch (err) { setStatusMsg('❌ Network Error'); }
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-6"
-        >
-            <div className="flex justify-between items-center bg-slate-800 p-6 rounded-xl border border-slate-700">
-                <div>
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <Users className="text-blue-400" />
-                        CRM Secure Portal
-                    </h2>
-                    <p className="text-slate-400 text-sm mt-1">Role-Based Access Control (RBAC) System</p>
-                </div>
-
-                {userRole ? (
-                    <div className="flex items-center gap-4">
-                        <div className="text-right">
-                            <div className="text-xs text-slate-400">Logged in as</div>
-                            <div className={`font-bold ${userRole === 'ADMIN' ? 'text-red-400' : 'text-green-400'}`}>
-                                {userRole}
-                            </div>
-                        </div>
-                        <button onClick={logout} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors">
-                            <LogOut size={20} />
-                        </button>
-                    </div>
-                ) : (
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => login('ADMIN')}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 rounded-lg transition-all"
-                        >
-                            <Shield size={16} /> Admin Login
-                        </button>
-                        <button
-                            onClick={() => login('CSR')}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/50 hover:bg-green-500/20 rounded-lg transition-all"
-                        >
-                            <UserPlus size={16} /> CSR Login
-                        </button>
-                    </div>
-                )}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+            {/* Header */}
+            <div>
+                <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                    <ShieldCheck className="text-red-500" size={32} />
+                    Platform Command Center
+                </h2>
+                <p className="text-slate-400 mt-2 text-lg">Centralized Administration for RetailHub PaaS</p>
             </div>
 
-            <AnimatePresence mode="wait">
-                {userRole === 'ADMIN' && (
+            {/* System Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {stats.map((stat, idx) => (
                     <motion.div
-                        key="admin-panel"
-                        initial={{ opacity: 0, y: 10 }}
+                        key={idx}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="bg-red-500/5 border border-red-500/20 p-8 rounded-xl"
+                        transition={{ delay: idx * 0.1 }}
+                        className={`p-4 rounded-xl border ${stat.color} flex items-center justify-between`}
                     >
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            <Lock size={20} className="text-red-400" />
-                            Admin Console: Create Agent
-                        </h3>
-                        <form onSubmit={handleCreateCsr} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input
-                                type="text"
-                                placeholder="New Agent Username"
-                                value={csrForm.username}
-                                onChange={e => setCsrForm({ ...csrForm, username: e.target.value })}
-                                className="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-red-500"
-                                required
-                            />
-                            <input
-                                type="password"
-                                placeholder="Set Password"
-                                value={csrForm.password}
-                                onChange={e => setCsrForm({ ...csrForm, password: e.target.value })}
-                                className="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-red-500"
-                                required
-                            />
-                            <button className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg transition-colors">
-                                Create CSR Agent
-                            </button>
-                        </form>
+                        <div>
+                            <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">{stat.label}</p>
+                            <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                        </div>
+                        <div className="p-3 bg-slate-950/30 rounded-lg backdrop-blur-sm">
+                            {stat.icon}
+                        </div>
                     </motion.div>
-                )}
+                ))}
+            </div>
 
-                {userRole === 'CSR' && (
-                    <motion.div
-                        key="csr-panel"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="bg-green-500/5 border border-green-500/20 p-8 rounded-xl"
+            {/* Main Control Panel */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                {/* Tabs */}
+                <div className="flex border-b border-slate-800">
+                    <button
+                        onClick={() => setActiveTab('retailers')}
+                        className={`px-8 py-4 font-medium transition-all flex items-center gap-2 ${activeTab === 'retailers' ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/5' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
                     >
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            <UserPlus size={20} className="text-green-400" />
-                            CSR Workspace: Customer Onboarding
-                        </h3>
-                        <form onSubmit={handleOnboardCustomer} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input
-                                type="text"
-                                placeholder="Customer Full Name"
-                                value={custForm.name}
-                                onChange={e => setCustForm({ ...custForm, name: e.target.value })}
-                                className="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-green-500"
-                                required
-                            />
-                            <input
-                                type="email"
-                                placeholder="Email Address"
-                                value={custForm.email}
-                                onChange={e => setCustForm({ ...custForm, email: e.target.value })}
-                                className="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-green-500"
-                                required
-                            />
-                            <button className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-colors">
-                                Onboard Customer
-                            </button>
-                        </form>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        <ShoppingBag size={18} /> Retail Partners
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('staff')}
+                        className={`px-8 py-4 font-medium transition-all flex items-center gap-2 ${activeTab === 'staff' ? 'text-red-400 border-b-2 border-red-400 bg-red-500/5' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                    >
+                        <Users size={18} /> Internal Staff
+                    </button>
+                </div>
 
-            {/* Status Output */}
+                {/* Content */}
+                <div className="p-8 bg-slate-900/50">
+                    {activeTab === 'staff' ? (
+                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                            <div className="max-w-2xl">
+                                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                    <UserPlus className="text-red-400" /> Provision Platform Staff
+                                </h3>
+                                <form onSubmit={handleCreateStaff} className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-slate-400 uppercase font-bold">Role</label>
+                                            <select
+                                                value={staffForm.role}
+                                                onChange={e => setStaffForm({ ...staffForm, role: e.target.value })}
+                                                className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-lg focus:border-red-500 transition-colors"
+                                            >
+                                                <option value="CSR">CSR (Support Agent)</option>
+                                                <option value="LOGISTICS">Logistics Manager</option>
+                                                <option value="ADMIN">Super Admin</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-slate-400 uppercase font-bold">Username</label>
+                                            <input
+                                                className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-lg focus:border-red-500 transition-colors"
+                                                placeholder="e.g. support_agent_01"
+                                                value={staffForm.username}
+                                                onChange={e => setStaffForm({ ...staffForm, username: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-slate-400 uppercase font-bold">Password</label>
+                                        <input
+                                            className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-lg focus:border-red-500 transition-colors"
+                                            type="password"
+                                            placeholder="Set secure password"
+                                            value={staffForm.password}
+                                            onChange={e => setStaffForm({ ...staffForm, password: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <button className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all">
+                                        <UserPlus size={18} /> Create Staff Account
+                                    </button>
+                                </form>
+                            </div>
+                        </motion.div>
+                    ) : activeTab === 'retailers' ? (
+                        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                            <div className="max-w-2xl">
+                                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                    <Truck className="text-blue-400" /> Onboard Retail Tenant
+                                </h3>
+                                <div className="bg-blue-500/5 border border-blue-500/10 p-4 rounded-lg mb-6 text-sm text-blue-200">
+                                    Creating a Tenant Admin account will automatically provision a new Store Profile and isolated environment for the partner.
+                                </div>
+                                <form onSubmit={handleOnboardRetailer} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-slate-400 uppercase font-bold">Store Identifier (Tenant ID)</label>
+                                        <input
+                                            className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-lg focus:border-blue-500 transition-colors"
+                                            placeholder="e.g. target_seattle_04"
+                                            value={retailerForm.username}
+                                            onChange={e => setRetailerForm({ ...retailerForm, username: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-slate-400 uppercase font-bold">Initial Admin Password</label>
+                                        <input
+                                            className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-lg focus:border-blue-500 transition-colors"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={retailerForm.password}
+                                            onChange={e => setRetailerForm({ ...retailerForm, password: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 transition-all">
+                                        <Truck size={18} /> Provision Store Tenant
+                                    </button>
+                                </form>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <div className="text-slate-500 text-center py-10">Select a tab to manage settings.</div>
+                    )}
+                </div>
+            </div>
+
             {statusMsg && (
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-4 bg-slate-900 border border-slate-700 rounded-lg text-sm font-mono text-blue-300"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-slate-800 border-l-4 border-emerald-500 text-white rounded-r-lg shadow-lg flex items-center gap-3"
                 >
-                    {statusMsg}
+                    <Activity size={20} className="text-emerald-400" />
+                    <span className="font-mono text-sm">{statusMsg}</span>
                 </motion.div>
             )}
-
-            {/* Hint Box */}
-            <div className="mt-8 p-4 bg-slate-800/50 rounded-lg text-xs text-slate-500">
-                <p className="font-bold mb-1">Testing Credentials (Pre-loaded):</p>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>ADMIN: <span className="text-slate-400">admin / admin123</span></div>
-                    <div>CSR: <span className="text-slate-400">csr1 / csr123</span></div>
-                </div>
-            </div>
         </motion.div>
-    )
+    );
 }

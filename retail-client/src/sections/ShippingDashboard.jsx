@@ -7,7 +7,10 @@ export default function ShippingDashboard() {
 
     const fetchPaid = async () => {
         try {
-            const res = await fetch('http://localhost:8082/api/oms/paid'); // Returns PAID orders
+            const token = localStorage.getItem('token');
+            const res = await fetch('http://localhost:8080/api/oms/paid', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }); // Returns PAID orders
             const data = await res.json();
             setOrders(data);
         } catch (e) {
@@ -22,7 +25,11 @@ export default function ShippingDashboard() {
     }, []);
 
     const handleShip = async (id) => {
-        await fetch(`http://localhost:8082/api/oms/${id}/ship`, { method: 'POST' });
+        const token = localStorage.getItem('token');
+        await fetch(`http://localhost:8080/api/oms/${id}/ship`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         fetchPaid();
     };
 

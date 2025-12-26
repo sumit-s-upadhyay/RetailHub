@@ -7,7 +7,10 @@ export default function InventorySection() {
 
     const fetchStock = async () => {
         try {
-            const res = await fetch('http://localhost:8085/api/inventory/products');
+            const token = localStorage.getItem('token');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+            const res = await fetch('http://localhost:8080/api/inventory/products', { headers });
             const data = await res.json();
             setProducts(data);
         } catch (e) {

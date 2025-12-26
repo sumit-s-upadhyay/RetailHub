@@ -34,6 +34,9 @@ echo    [+] Payment Service launched (Logs: payment.log)
 powershell -Command "Start-Process cmd -ArgumentList '/c cd inventory-service && mvn spring-boot:run > ..\inventory.log 2>&1' -WindowStyle Hidden"
 echo    [+] Inventory Service launched (Logs: inventory.log)
 
+powershell -Command "Start-Process cmd -ArgumentList '/c cd api-gateway && mvn spring-boot:run > ..\gateway.log 2>&1' -WindowStyle Hidden"
+echo    [+] API Gateway launched (Logs: gateway.log)
+
 echo 3. Launching Frontend (Visible)...
 :: We leave Frontend visible so you can see if Vite acts up, or we can hide it too. 
 :: Usually users want to see the Frontend bundler, but I will minimize it to keep it clean.

@@ -1,0 +1,9 @@
+package com.retailhub.inventory.repository;
+
+import com.retailhub.inventory.model.Review;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+    List<Review> findBySku(String sku);
+}

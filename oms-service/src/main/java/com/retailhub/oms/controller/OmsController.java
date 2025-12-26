@@ -10,22 +10,32 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/oms")
-@CrossOrigin(origins = "*") // Allow React Access
 public class OmsController {
 
     @Autowired
     private OrderRepository repository;
 
     @Autowired
-    private OrchestratorService orchestrator;
+    private org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate;
 
-    // --- 1. Customer Actions ---
+    @Autowired
+    private OrchestratorService orchestrator;
 
     // Place Order -> STATUS: CREATED
     @PostMapping("/create")
     public Order createOrder(@RequestParam String sku, @RequestParam int qty, @RequestParam String customer) {
         Order order = new Order(customer, sku, qty, 999.00 * qty); // Mock Price
-        return repository.save(order);
+        order.setStatus("CREATED"); // Initial State
+        Order saved = repository.save(order);
+
+        // Async Validation via Kafka
+        com.retailhub.oms.dto.OrderEvent event = new com.retailhub.oms.dto.OrderEvent(
+                "ORDER_CREATED", saved.getId(), sku, qty, customer);
+
+        kafkaTemplate.send("orders", event);
+        System.out.println("Published Order Event: " + event);
+
+        return saved;
     }
 
     // Customer sees their orders
@@ -46,6 +56,18 @@ public class OmsController {
             } else {
                 throw new RuntimeException("Payment Failed");
             }
+        }
+        return repository.save(order);
+    }
+
+    // Customer Cancels -> STATUS: CANCELLED (Only if CREATED)
+    @PostMapping("/{id}/cancel")
+    public Order cancelOrder(@PathVariable Long id) {
+        Order order = repository.findById(id).orElseThrow();
+        if ("CREATED".equals(order.getStatus())) {
+            order.setStatus("CANCELLED");
+        } else {
+            throw new RuntimeException("Cannot cancel order in state: " + order.getStatus());
         }
         return repository.save(order);
     }

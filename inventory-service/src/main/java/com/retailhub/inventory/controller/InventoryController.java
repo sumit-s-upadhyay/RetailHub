@@ -1,29 +1,51 @@
 package com.retailhub.inventory.controller;
 
-import com.retailhub.inventory.service.InventoryValidator;
+import com.retailhub.inventory.model.Product;
+import com.retailhub.inventory.model.Review;
+import com.retailhub.inventory.service.InventoryService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
-@org.springframework.web.bind.annotation.CrossOrigin(origins = "*")
 public class InventoryController {
 
-    private final InventoryValidator validator;
-    private final com.retailhub.inventory.repository.ProductRepository productRepository;
+    private final InventoryService inventoryService;
 
-    public InventoryController(InventoryValidator validator,
-            com.retailhub.inventory.repository.ProductRepository productRepository) {
-        this.validator = validator;
-        this.productRepository = productRepository;
+    public InventoryController(InventoryService inventoryService) {
+        this.inventoryService = inventoryService;
+    }
+
+    @PostMapping("/reviews")
+    public Review addReview(@RequestBody Review review) {
+        return inventoryService.addReview(review);
+    }
+
+    @GetMapping("/reviews")
+    public List<Review> getReviews(@RequestParam String sku) {
+        return inventoryService.getReviews(sku);
     }
 
     @GetMapping("/check")
     public boolean checkStock(@RequestParam String sku, @RequestParam int qty) {
-        return validator.validateRequest(sku, qty);
+        return inventoryService.checkStock(sku, qty);
     }
 
     @GetMapping("/products")
-    public java.util.List<com.retailhub.inventory.model.Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<Product> getAllProducts() {
+        return inventoryService.getAllProducts();
+    }
+
+    // --- CSR / Admin Product Management ---
+
+    @PostMapping("/products")
+    public Product addProduct(@RequestBody Product product) {
+        return inventoryService.addProduct(product);
+    }
+
+    @PutMapping("/products/{sku}")
+    public Product updateProduct(@PathVariable String sku, @RequestBody Product updates) {
+        return inventoryService.updateProduct(sku, updates);
     }
 }

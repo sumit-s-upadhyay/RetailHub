@@ -23,7 +23,7 @@ export default function OmsSection() {
 
             // REAL BACKEND CALL
             try {
-                await fetch('http://localhost:8082/api/oms/next', { method: 'POST' });
+                await fetch('http://localhost:8080/api/oms/next', { method: 'POST' });
                 addLog("   -> Backend Processing Started (Watch Server Logs)...", "border-purple-500 text-purple-300");
             } catch (e) {
                 addLog("   ❌ Backend Connection Failed (Ensure OMS is running)", "border-red-500 text-red-300");

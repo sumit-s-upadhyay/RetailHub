@@ -4,7 +4,7 @@ services:
   # ---------------------------------------------------------------------------
   # INFRASTRUCTURE: DATA & MESSAGING
   # ---------------------------------------------------------------------------
-  
+
   # MySQL Database (Shared Instance for Resource Efficiency)
   # In Prod, each service usually has its own DB server, but for local env we use one container with multiple schemas.
   mysql:
@@ -49,6 +49,23 @@ services:
     networks:
       - retailhub-net
 
+  # Redis (Caching)
+  redis:
+    image: redis:alpine
+    container_name: retailhub-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - retailhub-net
+
+  # Zipkin (Distributed Tracing)
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: retailhub-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - retailhub-net
   # ---------------------------------------------------------------------------
   # APPLICATIONS (Uncomment when Dockerfiles are ready)
   # ---------------------------------------------------------------------------

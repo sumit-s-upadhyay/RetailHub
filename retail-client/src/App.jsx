@@ -1,48 +1,54 @@
 import React, { useState } from 'react';
 import LoginSection from './sections/LoginSection';
-import CsrDashboard from './sections/CsrDashboard';
-import ShippingDashboard from './sections/ShippingDashboard';
+import CsrSection from './sections/CsrSection';
+import LogisticsSection from './sections/LogisticsSection';
 import StorefrontSection from './sections/StorefrontSection';
 import InventorySection from './sections/InventorySection';
-import { Home, LogOut, Package } from 'lucide-react';
+import CrmSection from './sections/CrmSection';
+import TenantSection from './sections/TenantSection';
+import { Home, LogOut, Package, Truck, Shield, Building2 } from 'lucide-react';
+
+import { useAuth } from './context/AuthContext';
 
 function App() {
-    const [userRole, setUserRole] = useState(null); // 'customer', 'csr', 'shipping'
-    const [userName, setUserName] = useState(null);
+    const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('home');
 
-    const handleLogin = (role, username) => {
-        setUserRole(role);
-        setUserName(username);
-        setActiveTab('home');
-    };
-
-    const handleLogout = () => {
-        setUserRole(null);
-        setUserName(null);
-    };
+    // Derived state from Auth Context
+    const userRole = user?.role;
+    const userName = user?.username;
 
     // --- RENDER LOGIC ---
     const renderContent = () => {
-        if (!userRole) return <LoginSection onLogin={handleLogin} />;
+        if (!user) return <LoginSection />;
 
-        if (userRole === 'customer') {
+        if (userRole === 'CUSTOMER') {
             return <StorefrontSection currentUser={userName} />;
         }
 
-        if (userRole === 'csr') {
-            return activeTab === 'home' ? <CsrDashboard /> : <InventorySection />;
+        // CSR (Admin) Dashboard
+        if (['CSR', 'STORE_MANAGER', 'ADMIN'].includes(userRole)) {
+            // Can switch between Product Manager and Raw Inventory View
+            return activeTab === 'home' ? <CsrSection currentUser={userName} /> : <InventorySection />;
         }
 
-        if (userRole === 'shipping') {
-            return <ShippingDashboard />;
+        // Logistics Dashboard
+        if (['SHIPPING', 'LOGISTICS', 'STORE_LOGISTICS'].includes(userRole)) {
+            return <LogisticsSection />;
         }
+
+        // Tenant (Retail Store) Dashboard
+        if (['TENANT_ADMIN'].includes(userRole)) {
+            return <TenantSection currentUser={userName} />;
+        }
+
+        return <div className="p-10 text-center">Unknown Role: {userRole}</div>;
     };
 
-    if (!userRole) {
+    if (!user) {
         return (
             <div className="h-screen bg-slate-950 flex items-center justify-center p-8">
-                <LoginSection onLogin={handleLogin} />
+                <LoginSection />
             </div>
         );
     }
@@ -62,13 +68,13 @@ function App() {
                 <nav className="flex-1 p-4 space-y-2">
                     <SidebarItem icon={<Home size={20} />} label="V Workspace" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
 
-                    {userRole === 'csr' && (
+                    {['CSR', 'STORE_MANAGER'].includes(userRole) && (
                         <SidebarItem icon={<Package size={20} />} label="Live Inventory" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
                     )}
                 </nav>
 
                 <div className="p-4 border-t border-slate-800">
-                    <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 w-full text-slate-400 hover:text-white hover:bg-red-500/10 rounded-lg transition-colors">
+                    <button onClick={logout} className="flex items-center gap-3 px-3 py-2 w-full text-slate-400 hover:text-white hover:bg-red-500/10 rounded-lg transition-colors">
                         <LogOut size={16} />
                         <span className="text-sm font-medium">Sign Out</span>
                     </button>
